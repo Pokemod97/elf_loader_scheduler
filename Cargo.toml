@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 binread = "2.2.0"
+libc = "0.2.134"
+nix = {version="0.25.0", features=['process','mman']}
+#syscalls = {version = "0.6.6", features=['x86_64']}

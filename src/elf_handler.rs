@@ -1,9 +1,78 @@
 use binread::{BinRead, Error};
 use std::{fmt, fmt::Display};
 
-#[derive(Clone, Copy, BinRead)]
+#[derive(Clone, Copy, BinRead, Debug)]
 #[br(repr=u32)]
-enum PTYPE {
+#[non_exhaustive]
+enum SHFLAGS32 {
+    SHF_WRITE = 1,
+    SHF_ALLOC,
+    SHF_EXECINSTR,
+    SHF_MERGE,
+    SHF_STRINGS,
+    SHF_INFO_LINK,
+    SHF_LINK_ORDER,
+    SHF_OS_NONCONFORMING,
+    SHF_GROUP,
+    SHF_TLS,
+    SHF_MASKOS,
+    SHF_MASKPROC,
+    SHF_ORDERED,
+    SHF_EXCLUDE,
+}
+#[derive(Clone, Copy, BinRead, Debug)]
+#[br(repr=u64)]
+#[non_exhaustive]
+enum SHFLAGS64 {
+    SHF_WRITE = 1,
+    SHF_ALLOC,
+    SHF_EXECINSTR,
+    SHF_MERGE,
+    SHF_STRINGS,
+    SHF_INFO_LINK,
+    SHF_LINK_ORDER,
+    SHF_OS_NONCONFORMING,
+    SHF_GROUP,
+    SHF_TLS,
+    SHF_MASKOS,
+    SHF_MASKPROC,
+    SHF_ORDERED,
+    SHF_EXCLUDE,
+}
+
+#[derive(Clone, Copy, BinRead, Debug, PartialEq, Eq)]
+#[br(repr=u32)]
+#[non_exhaustive]
+pub enum SHTYPE {
+    SHT_NULL,
+    SHT_PROGBITS,
+    SHT_SYMTAB,
+    SHT_STRTAB,
+    SHT_RELA,
+    SHT_HASH,
+    SHT_DYNAMIC,
+    SHT_NOTE,
+    SHT_NOBITS,
+    SHT_REL,
+    SHT_SHLIB,
+    SHT_DYNSYM,
+    SHT_INIT_ARRAY,
+    SHT_FINI_ARRAY,
+    SHT_PREINIT_ARRAY,
+    SHT_GROUP,
+    SHT_SYMTAB_SHNDX,
+    SHT_NUM,
+    SHT_LOOS = 0x60000000,
+    SHT_GNU_HASH = 0x6fff_fff6,
+    VERSYM = 0x6fffffff,
+    VERNEED = 0x6ffffffe,
+}
+
+#[derive(Clone, Copy, BinRead, Debug, PartialEq, Eq)]
+#[br(repr=u32)]
+#[non_exhaustive]
+
+pub enum PTYPE {
     PT_NULL,
     PT_LOAD,
     PT_DYNAMIC,
@@ -16,11 +85,16 @@ enum PTYPE {
     PT_HIOS = 0x6FFFFFFF,
     PT_LOPROC = 0x70000000,
     PT_HIPROC = 0x7FFFFFFF,
+    PT_GNU_EH_FRAME = 0x6474e550,
+    PT_GNU_STACK = 0x6474e551,
+    PT_GNU_RELRO = 0x6474e552,
+    GNU_PROPERTY = 0x46474e553,
 }
 
-#[derive(Clone, Copy, BinRead)]
+#[derive(Clone, Copy, BinRead, Debug)]
 #[br(repr=u16)]
-enum ETYPE {
+#[non_exhaustive]
+pub enum ETYPE {
     ET_NONE,
     ET_REL,
     ET_EXEC,
@@ -31,25 +105,11 @@ enum ETYPE {
     ET_LOPROC = 0xFF00,
     ET_HIPROC = 0xFFFF,
 }
-impl Display for ETYPE {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            ETYPE::ET_NONE => f.write_str("ET_NONE"),
-            ETYPE::ET_REL => f.write_str("ET_REL"),
-            ETYPE::ET_EXEC => f.write_str("ET_EXEC"),
-            ETYPE::ET_DYN => f.write_str("ET_DYN"),
-            ETYPE::ET_CORE => f.write_str("ET_CORE"),
-            ETYPE::ET_LOOS => f.write_str("ET_LOOS"),
-            ETYPE::ET_HIOS => f.write_str("ET_HIOS"),
-            ETYPE::ET_LOPROC => f.write_str("ET_LOPROC"),
-            ETYPE::ET_HIPROC => f.write_str("ET_HIPROC"),
-        }
-    }
-}
 
-#[derive(Clone, Copy, BinRead)]
+#[derive(Clone, Copy, BinRead, Debug)]
 #[br(repr=u8)]
-enum EIOSABI {
+#[non_exhaustive]
+pub enum EIOSABI {
     SystemV,
     HPUX,
     NetBSD,
@@ -68,33 +128,10 @@ enum EIOSABI {
     FenixOS,
     NuxiCloudABI,
     StratusTechnologiesOpenVOS,
-}
-impl fmt::Display for EIOSABI {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
-            EIOSABI::SystemV => f.write_str("SystemV"),
-            EIOSABI::HPUX => f.write_str("HPUX"),
-            EIOSABI::NetBSD => f.write_str("NetBSD"),
-            EIOSABI::Linux => f.write_str("Linux"),
-            EIOSABI::GNUHurd => f.write_str("GNUHurd"),
-            EIOSABI::Solaris => f.write_str("Solaris"),
-            EIOSABI::AIX => f.write_str("AIX"),
-            EIOSABI::IRIX => f.write_str("IRIX"),
-            EIOSABI::FreeBSD => f.write_str("FreeBSD"),
-            EIOSABI::Tru64 => f.write_str("Tru64"),
-            EIOSABI::NovellModesto => f.write_str("NovellModesto"),
-            EIOSABI::OpenBSD => f.write_str("OpenBSD"),
-            EIOSABI::OpenVMS => f.write_str("OpenVMS"),
-            EIOSABI::NonStopKernel => f.write_str("NonStopKernel"),
-            EIOSABI::AROS => f.write_str("AROS"),
-            EIOSABI::FenixOS => f.write_str("FenixOS"),
-            EIOSABI::NuxiCloudABI => f.write_str("NuxiCloudABI"),
-            EIOSABI::StratusTechnologiesOpenVOS => f.write_str("StratusTechnologiesOpenVOS"),
-        }
-    }
+    UNKNOWN = 0xbf,
 }
 
-#[derive(BinRead)]
+#[derive(BinRead, Debug)]
 pub struct ElfHeader {
     magic: [u8; 4],
     ei_class: u8,
@@ -117,6 +154,8 @@ pub struct ElfHeader {
     e_phentsize: u16,
     e_phnum: u16,
     e_shentsize: u16,
+    pub e_shnum: u16,
+    pub e_shstrndx: u16,
 }
 impl ElfHeader {
     pub fn convert64(&self) -> Result<ElfHeader64, Error> {
@@ -146,111 +185,84 @@ impl ElfHeader {
             e_phentsize: self.e_phentsize,
             e_phnum: self.e_phnum,
             e_shentsize: self.e_shentsize,
+            e_shnum: self.e_shnum,
+            e_shstrndx: self.e_shstrndx,
         };
 
         Ok(header)
     }
 }
-impl fmt::Display for ElfHeader {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "magic: {:#x?},
-        ei_class: {},
-        ei_version: {:#x},
-        ei_data:{},
-        ei_osabi: {},
-        ei_abiversion: {:#x},
-        e_type: {},
-        e_machine: {:#x},
-        e_version: {},
-        e_entry: {:#x?},
-        e_phoff: {:#x?},
-        e_shoff:{:#x?},
-        e_flags: {:#x},
-        e_ehsize: {:#x},
-        e_phentsize: {:#x},
-        e_phnum: {:#x},
-        e_shentsize: {:#x},",
-            self.magic,
-            self.ei_class,
-            self.ei_version,
-            self.ei_data,
-            self.ei_osabi,
-            self.ei_abiversion,
-            self.e_type,
-            self.e_machine,
-            self.e_version,
-            self.e_entry,
-            self.e_phoff,
-            self.e_shoff,
-            self.e_flags,
-            self.e_ehsize,
-            self.e_phentsize,
-            self.e_phnum,
-            self.e_shentsize
-        )
-    }
-}
+
+#[derive(BinRead, Debug)]
 pub struct ElfHeader64 {
     magic: [u8; 4],
-    ei_class: u8,
-    ei_version: u8,
-    ei_data: u8,
-    ei_osabi: EIOSABI,
-    ei_abiversion: u8,
-    ei_pad: [u8; 7],
-    e_type: ETYPE,
-    e_machine: u16,
-    e_version: u32,
-    e_entry: u64,
-    e_phoff: u64,
-    e_shoff: u64,
-    e_flags: u32,
-    e_ehsize: u16,
-    e_phentsize: u16,
-    e_phnum: u16,
-    e_shentsize: u16,
+    pub ei_class: u8,
+    pub ei_version: u8,
+    pub ei_data: u8,
+    pub ei_osabi: EIOSABI,
+    pub ei_abiversion: u8,
+    pub ei_pad: [u8; 7],
+    pub e_type: ETYPE,
+    pub e_machine: u16,
+    pub e_version: u32,
+    pub e_entry: u64,
+    pub e_phoff: u64,
+    pub e_shoff: u64,
+    pub e_flags: u32,
+    pub e_ehsize: u16,
+    pub e_phentsize: u16,
+    pub e_phnum: u16,
+    pub e_shentsize: u16,
+    pub e_shnum: u16,
+    pub e_shstrndx: u16,
 }
 
-impl fmt::Display for ElfHeader64 {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "magic: {:#x?},
-        ei_class: {},
-        ei_version: {:#x},
-        ei_data:{},
-        ei_osabi: {},
-        ei_abiversion: {:#x},
-        e_type: {},
-        e_machine: {:#x},
-        e_version: {},
-        e_entry: {:#x},
-        e_phoff: {:#x},
-        e_shoff:{:#x},
-        e_flags: {:#x},
-        e_ehsize: {:#x},
-        e_phentsize: {:#x},
-        e_phnum: {:#x},
-        e_shentsize: {:#x},",
-            self.magic,
-            self.ei_class,
-            self.ei_version,
-            self.ei_data,
-            self.ei_osabi,
-            self.ei_abiversion,
-            self.e_type,
-            self.e_machine,
-            self.e_version,
-            self.e_entry,
-            self.e_phoff,
-            self.e_shoff,
-            self.e_flags,
-            self.e_ehsize,
-            self.e_phentsize,
-            self.e_phnum,
-            self.e_shentsize
-        )
-    }
+#[derive(BinRead, Debug)]
+pub struct ProgramHeader64 {
+    pub p_type: PTYPE,
+    pub p_flags: i32,
+    pub p_offset: u64,
+    pub p_vaddr: u64,
+    pub p_paddr: u64,
+    pub p_filesz: u64,
+    pub p_memsz: u64,
+    pub p_align: u64,
+}
+#[derive(BinRead, Debug)]
+struct ProgramHeader32 {
+    p_type: PTYPE,
+    p_offset: i32,
+    p_vaddr: u32,
+    p_paddr: u32,
+    p_filesz: u32,
+    p_flags: u32,
+    p_memsz: u32,
+    p_align: u32,
+}
+
+#[derive(BinRead, Debug, Clone, Copy)]
+pub struct SectionHeader64 {
+    pub sh_name: u32,
+    pub sh_type: SHTYPE,
+    pub sh_flags: u64,
+    sh_addr: u64,
+    pub sh_offset: u64,
+    pub sh_size: u64,
+    sh_link: u32,
+    sh_info: u32,
+    sh_addralign: u64,
+    sh_entsize: u64,
+}
+
+#[derive(BinRead, Debug)]
+pub struct SectionHeader32 {
+    sh_name: u32,
+    sh_type: SHTYPE,
+    sh_flags: u32,
+    sh_addr: u32,
+    sh_size: u32,
+    sh_link: u32,
+    sh_info: u32,
+    sh_addralign: u32,
+    sh_entsize: u32,
 }
